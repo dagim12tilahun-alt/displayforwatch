@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mining Remote Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #111; color: white; }
+        .card { width: 100%; max-width: 400px; background: #222; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); border: 1px solid #333; }
+        label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; display: block; margin-top: 10px;}
+        input { width: 100%; padding: 15px; margin: 8px 0 20px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; font-size: 16px; box-sizing: border-box; }
+        #passInput { border-left: 5px solid #007bff; }
+        button { width: 100%; padding: 16px; background: #007bff; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; cursor: pointer; font-size: 16px; }
+        .paste-btn { background: #28a745; margin-bottom: 5px; }
+        button:active { opacity: 0.8; transform: scale(0.98); }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Remote Address</h2>
+        <label>Unique Password (e.g., A or B)</label>
+        <input type="text" id="passInput" placeholder="Assign phone ID...">
+        
+        <hr style="border: 0.5px solid #333; margin: 10px 0 20px 0;">
+        
+        <label>Command (A-E or Message)</label>
+        <input type="text" id="contentInput" placeholder="Type or paste here...">
+        
+        <button class="paste-btn" onclick="pasteAndSend()">📋 Paste & Send</button>
+        <button onclick="sendData()">🚀 Manual Send</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // YOUR NEW PROJECT CREDENTIALS
+        const SUPABASE_URL = 'https://jafefebdfpttwtkmudok.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_ZI3nHu58SdsYiZr_KncLUg_oK0-eHOJ';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Load the password from the phone's memory
+        const passField = document.getElementById('passInput');
+        passField.value = localStorage.getItem('mining_addr') || '';
+
+        async function pasteAndSend() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    document.getElementById('contentInput').value = text;
+                    sendData();
+                }
+            } catch (err) {
+                alert('Allow clipboard access to use Paste & Send.');
+            }
+        }
+
+        async function sendData() {
+            const pwd = passField.value.trim();
+            const content = document.getElementById('contentInput').value;
+            
+            if (!pwd || !content) {
+                alert("Please fill in both fields.");
+                return;
+            }
+
+            // Save the password to memory
+            localStorage.setItem('mining_addr', pwd);
+
+            // Insert into your NEW table
+            const { error } = await supabaseClient
+                .from('remote_messages') 
+                .insert([{ content: content, password: pwd }]);
+
+            if (!error) {
+                document.getElementById('contentInput').value = '';
+                console.log("Sent successfully!");
+            } else {
+                alert("Error: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
