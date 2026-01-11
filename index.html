@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Mining Display Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body, html { margin: 0; padding: 0; background: black; color: white; font-family: sans-serif; height: 100%; overflow: hidden; }
 
@@ -21,27 +22,44 @@
         #fixed-corner-ui {
             position: fixed; bottom: 20px; right: 20px;
             display: flex; flex-direction: column; align-items: flex-end;
-            z-index: 2000; pointer-events: none;
+            z-index: 2000;
         }
 
-        #coloring-layer-ui { display: none; flex-direction: row; gap: 8px; margin-bottom: 5px; }
-        .dot { width: 14px; height: 14px; border-radius: 50%; background: #222; border: 1.5px solid #444; }
+        /* LED GLOW LIGHTS */
+        #coloring-layer-ui { display: none; flex-direction: row; gap: 12px; margin-bottom: 8px; }
+        .dot { 
+            width: 18px; height: 18px; border-radius: 50%; 
+            background: #111; border: 1px solid #333;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        /* Glow Rays */
+        .dot.active-red { background: #ff0000; box-shadow: 0 0 15px 4px rgba(255,0,0,0.8); }
+        .dot.active-blue { background: #007bff; box-shadow: 0 0 15px 4px rgba(0,123,255,0.8); }
+        .dot.active-green { background: #28a745; box-shadow: 0 0 15px 4px rgba(40,167,69,0.8); }
+        .dot.active-yellow { background: #ffc107; box-shadow: 0 0 15px 4px rgba(255,193,7,0.8); }
+        .dot.active-purple { background: #6f42c1; box-shadow: 0 0 15px 4px rgba(111,66,193,0.8); }
+        .dot.active-white { background: #ffffff; box-shadow: 0 0 15px 4px rgba(255,255,255,0.9); }
 
-        /* MESSAGING DISPLAY: Minimalist & Tight */
+        /* TOUCH-SCROLLABLE COLUMNS */
         #messaging-layer-ui { 
-            display: none; flex-direction: row; gap: 3px; 
-            height: 120px; /* Window height for 5 items */
-            overflow: hidden; align-items: flex-end;
+            display: none; flex-direction: row; gap: 4px; 
+            height: 120px; overflow: hidden; align-items: flex-end;
+            pointer-events: auto;
         }
         .msg-column { 
             display: flex; flex-direction: column; gap: 2px; 
-            width: 50px; transition: transform 0.6s cubic-bezier(0.45, 0.05, 0.55, 0.95);
+            width: 55px; height: 100%;
+            overflow-y: auto; /* Enable manual touch scroll */
+            scrollbar-width: none; -ms-overflow-style: none;
+            scroll-behavior: smooth;
         }
+        .msg-column::-webkit-scrollbar { display: none; }
+        
         .msg-box { 
             font-size: 12px; min-height: 20px; line-height: 20px; padding: 2px;
-            background: rgba(255, 255, 255, 0.05); /* Barely visible background */
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #007bff; border-radius: 2px; text-align: center;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #007bff; border-radius: 2px; text-align: center; flex-shrink: 0;
         }
         #col-B .msg-box { color: #28a745; }
     </style>
