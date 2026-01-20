@@ -22,6 +22,7 @@ scrollContainer.addEventListener('scroll', () => {
     } else if (scrollPos < vh * 2.5) { 
         colorUI.style.display = 'none'; messageUI.style.display = 'flex';
     }
+    // Loop back to start
     if (scrollPos >= (vh * 3)) scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
 });
 
@@ -52,9 +53,9 @@ async function handleColorLogic(pattern, dotId) {
 
     for (let i = 0; i < 5; i++) {
         for (let char of sequence) {
-            dot.className = `dot ${colorClasses[char]}`; // Add the glow class
+            dot.className = `dot ${colorClasses[char]}`;
             await wait(4000);
-            dot.className = 'dot'; // Remove it
+            dot.className = 'dot';
             await wait(500); 
         }
         dot.className = 'dot active-white'; await wait(500);
@@ -63,12 +64,16 @@ async function handleColorLogic(pattern, dotId) {
     dot.className = 'dot';
 }
 
-// --- 4. SMART SCROLL LOGIC ---
+// --- 4. SMART SCROLL LOGIC WITH INACTIVITY TIMER ---
 let scrollIntervals = { 'col-A': null, 'col-B': null };
+let inactivityTimers = { 'col-A': null, 'col-B': null };
 
 function handleMessageLogic(items, colId) {
     const column = document.getElementById(colId);
+    
+    // Clear existing states
     clearInterval(scrollIntervals[colId]);
+    clearTimeout(inactivityTimers[colId]);
     column.innerHTML = ""; 
     column.scrollTop = 0;
 
@@ -80,14 +85,33 @@ function handleMessageLogic(items, colId) {
     });
 
     let currentIndex = 0;
-    const itemHeight = 22; // Height + gap
+    const itemHeight = 46; // Matches font size + padding + gap
     
-    if (items.length > 5) {
+    const startAutoScroll = () => {
+        clearInterval(scrollIntervals[colId]);
         scrollIntervals[colId] = setInterval(() => {
             currentIndex += 5;
             if (currentIndex >= items.length) currentIndex = 0;
-            // Use native scrollTo for smooth auto-movement
             column.scrollTo({ top: currentIndex * itemHeight, behavior: 'smooth' });
         }, 10000);
+    };
+
+    const resetInactivityTimer = () => {
+        // Stop movement if user touches/scrolls
+        clearInterval(scrollIntervals[colId]);
+        clearTimeout(inactivityTimers[colId]);
+        
+        // Restart auto-scroll only after 10 seconds of no interaction
+        inactivityTimers[colId] = setTimeout(() => {
+            startAutoScroll();
+        }, 10000);
+    };
+
+    // Attach interaction listener
+    column.addEventListener('scroll', resetInactivityTimer);
+
+    // Initial Start if list is long
+    if (items.length > 10) {
+        startAutoScroll();
     }
 }
