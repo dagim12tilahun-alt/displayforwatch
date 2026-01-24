@@ -4,46 +4,59 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const scrollContainer = document.getElementById('mainScroll');
 const topbar = document.getElementById('topbar');
+const colorUI = document.getElementById('coloring-layer-ui');
+const messageUI = document.getElementById('messaging-layer-ui');
 const vh = window.innerHeight;
 
-// --- 1. UI VISIBILITY ---
+// --- 1. MANUAL SCROLL & VISIBILITY LOGIC ---
 scrollContainer.addEventListener('scroll', () => {
     const scrollPos = scrollContainer.scrollTop;
-    if (scrollPos > 20) topbar.classList.add('topbar-hidden');
-    else topbar.classList.remove('topbar-hidden');
+    const totalHeight = scrollContainer.scrollHeight;
 
-    const colorUI = document.getElementById('coloring-layer-ui');
-    const messageUI = document.getElementById('messaging-layer-ui');
-
-    if (scrollPos < vh * 0.5) { 
-        colorUI.style.display = 'none'; messageUI.style.display = 'none';
-    } else if (scrollPos < vh * 1.5) { 
-        colorUI.style.display = 'flex'; messageUI.style.display = 'none';
-    } else if (scrollPos < vh * 2.5) { 
-        colorUI.style.display = 'none'; messageUI.style.display = 'flex';
+    // Handle Topbar Visibility
+    if (scrollPos > 20) {
+        topbar.classList.add('topbar-hidden');
+    } else {
+        topbar.classList.remove('topbar-hidden');
     }
-    // Loop back to start
-    if (scrollPos >= (vh * 3)) scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Determine which layer is active based on scroll position
+    if (scrollPos < vh * 0.8) { 
+        colorUI.style.display = 'flex'; 
+        messageUI.style.display = 'none';
+    } else {
+        colorUI.style.display = 'none'; 
+        messageUI.style.display = 'flex';
+    }
+
+    // Loop back to top if user scrolls to the absolute bottom
+    if (scrollPos + vh >= totalHeight - 2) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'instant' });
+    }
 });
 
-// --- 2. DATA PROCESSING ---
+// --- 2. SUPABASE REALTIME DATA ---
 supabaseClient
     .channel('mining-live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'remote_messages' }, payload => {
         const { content, password } = payload.new;
         const id = password.toUpperCase();
         
+        // Handle Color Detection (A-E)
         const colorSequence = content.toLowerCase().match(/[a-e]/g);
         if (colorSequence) handleColorLogic(colorSequence.join(''), `dot-${id}`);
 
+        // Handle Message Items
         const msgItems = content.match(/(\d*[a-zA-Z])/g);
         if (msgItems) handleMessageLogic(msgItems, `col-${id}`);
     })
     .subscribe();
 
-// --- 3. LED GLOW LOGIC ---
+// --- 3. COLOR DISPLAY LOGIC ---
 async function handleColorLogic(pattern, dotId) {
     const dot = document.getElementById(dotId);
+    if(!dot) return;
+    
     const sequence = pattern.toUpperCase().split('');
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
     const colorClasses = { 
@@ -61,57 +74,21 @@ async function handleColorLogic(pattern, dotId) {
         dot.className = 'dot active-white'; await wait(500);
         dot.className = 'dot'; await wait(500);
     }
-    dot.className = 'dot';
 }
 
-// --- 4. SMART SCROLL LOGIC WITH INACTIVITY TIMER ---
-let scrollIntervals = { 'col-A': null, 'col-B': null };
-let inactivityTimers = { 'col-A': null, 'col-B': null };
-
+// --- 4. MESSAGE DISPLAY LOGIC (Manual Extension) ---
 function handleMessageLogic(items, colId) {
     const column = document.getElementById(colId);
-    
-    // Clear existing states
-    clearInterval(scrollIntervals[colId]);
-    clearTimeout(inactivityTimers[colId]);
-    column.innerHTML = ""; 
-    column.scrollTop = 0;
+    if(!column) return;
 
+    // Append new messages to the bottom, extending the page height
     items.forEach(item => {
         const box = document.createElement('div');
         box.className = 'msg-box';
         box.innerText = item;
         column.appendChild(box);
     });
-
-    let currentIndex = 0;
-    const itemHeight = 46; // Matches font size + padding + gap
     
-    const startAutoScroll = () => {
-        clearInterval(scrollIntervals[colId]);
-        scrollIntervals[colId] = setInterval(() => {
-            currentIndex += 5;
-            if (currentIndex >= items.length) currentIndex = 0;
-            column.scrollTo({ top: currentIndex * itemHeight, behavior: 'smooth' });
-        }, 10000);
-    };
-
-    const resetInactivityTimer = () => {
-        // Stop movement if user touches/scrolls
-        clearInterval(scrollIntervals[colId]);
-        clearTimeout(inactivityTimers[colId]);
-        
-        // Restart auto-scroll only after 10 seconds of no interaction
-        inactivityTimers[colId] = setTimeout(() => {
-            startAutoScroll();
-        }, 10000);
-    };
-
-    // Attach interaction listener
-    column.addEventListener('scroll', resetInactivityTimer);
-
-    // Initial Start if list is long
-    if (items.length > 10) {
-        startAutoScroll();
-    }
+    // The browser automatically handles the website's scrollbar length 
+    // as more 'msg-box' divs are added to the columns.
 }
