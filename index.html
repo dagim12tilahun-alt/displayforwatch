@@ -2,61 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mining Display Hub</title>
+    <title>Mining Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* Base Setup - Optimized for Watch */
+        /* Base Setup - Cleaned for Watch Scrolling */
         body, html { 
             margin: 0; padding: 0; background: black; color: white; 
-            font-family: sans-serif; height: 100%; 
-            overflow: hidden; 
-            overscroll-behavior: none; /* Prevents pull-to-refresh hanging */
+            font-family: sans-serif; 
+            /* Allow the watch to see the full document height */
+            overflow-y: auto; 
+            overflow-x: hidden;
+            overscroll-behavior: none; 
         }
 
-        /* Continuous Scroll Container */
-        .scroll-container { 
-            height: 100vh; 
+        /* The Hub - Now one long continuous element */
+        .main-wrapper { 
             width: 100vw;
-            overflow-y: scroll; 
-            scroll-behavior: smooth; 
-            /* Forces watch to prioritize vertical scrolling over system gestures */
-            touch-action: pan-y; 
-            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            /* touch-action: auto ensures the Watch Crown and touch work normally */
+            touch-action: auto; 
         }
         
-        .layer { 
+        /* Section 1: Top area (Dots space) */
+        .color-section { 
             width: 100vw; 
-            min-height: 100vh; 
+            height: 100vh; /* Keeps initial screen focused on dots */
             position: relative;
-            display: block;
         }
 
-        /* Topbar */
+        /* Section 2: Messaging area (Right underneath) */
+        #messaging-layer-ui { 
+            display: flex; 
+            flex-direction: row; 
+            justify-content: flex-end; 
+            gap: 12px; 
+            padding: 20px 15px 100px 0; 
+            width: 100%;
+            box-sizing: border-box;
+            background: black;
+        }
+
         #topbar {
-            position: fixed; top: 0; width: 100%; height: 60px;
+            position: fixed; top: 0; width: 100%; height: 50px;
             background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px);
-            transition: transform 0.4s ease; z-index: 3000;
-            pointer-events: none; /* Touches pass through to the scroller */
+            z-index: 3000; pointer-events: none;
         }
-        .topbar-hidden { transform: translateY(-100%); }
 
-        /* Color UI Overlay */
         #coloring-layer-ui {
             position: fixed; bottom: 20px; right: 20px;
             display: flex; flex-direction: row; gap: 8px; z-index: 2000;
-            transition: opacity 0.3s ease;
             pointer-events: none;
         }
+
         .dot { 
             width: 12px; height: 12px; border-radius: 50%; 
             background: #111; border: 1px solid #333;
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* First dot hidden as requested */
-        #dot-A { display: none; } 
+        #dot-A { display: none; } /* Hidden as requested */
 
-        /* Glow Effects */
+        /* Colors */
         .dot.active-red { background: #ff0000; box-shadow: 0 0 10px 2px rgba(255,0,0,0.8); }
         .dot.active-blue { background: #007bff; box-shadow: 0 0 10px 2px rgba(0,123,255,0.8); }
         .dot.active-green { background: #28a745; box-shadow: 0 0 10px 2px rgba(40,167,69,0.8); }
@@ -64,13 +71,6 @@
         .dot.active-purple { background: #6f42c1; box-shadow: 0 0 10px 2px rgba(111,66,193,0.8); }
         .dot.active-white { background: #ffffff; box-shadow: 0 0 12px 3px rgba(255,255,255,0.9); }
 
-        /* Messaging Layer (Continuous Scroll) */
-        #messaging-layer-ui { 
-            display: flex; flex-direction: row; justify-content: flex-end; 
-            gap: 12px; padding: 70px 15px 100px 0; 
-            width: 100%; min-height: 100vh;
-            box-sizing: border-box;
-        }
         .msg-column { display: flex; flex-direction: column; gap: 6px; width: 75px; }
         
         .msg-box { 
@@ -84,15 +84,13 @@
 <body>
     <div id="topbar"></div>
 
-    <div class="scroll-container" id="mainScroll">
-        <section class="layer" id="layer1"></section>
+    <div class="main-wrapper">
+        <section class="color-section"></section>
         
-        <section class="layer" id="layer2">
-            <div id="messaging-layer-ui">
-                <div id="col-A" class="msg-column"></div>
-                <div id="col-B" class="msg-column"></div>
-            </div>
-        </section>
+        <div id="messaging-layer-ui">
+            <div id="col-A" class="msg-column"></div>
+            <div id="col-B" class="msg-column"></div>
+        </div>
     </div>
 
     <div id="coloring-layer-ui">
