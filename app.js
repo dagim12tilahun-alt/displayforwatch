@@ -8,45 +8,61 @@ const colorUI = document.getElementById('coloring-layer-ui');
 const messageUI = document.getElementById('messaging-layer-ui');
 const vh = window.innerHeight;
 
-// --- 1. SCROLL VISIBILITY ---
+// --- 1. VISIBILITY & SCROLL LOGIC ---
 scrollContainer.addEventListener('scroll', () => {
     const scrollPos = scrollContainer.scrollTop;
-    if (scrollPos > 20) topbar.classList.add('topbar-hidden');
-    else topbar.classList.remove('topbar-hidden');
 
+    // Handle Topbar
+    if (scrollPos > 20) {
+        topbar.classList.add('topbar-hidden');
+    } else {
+        topbar.classList.remove('topbar-hidden');
+    }
+
+    // Hide color dots when scrolling to the message layer
     if (scrollPos < vh * 0.5) {
         colorUI.style.opacity = '1';
-        messageUI.style.display = 'none';
+        colorUI.style.pointerEvents = 'auto';
     } else {
         colorUI.style.opacity = '0';
-        messageUI.style.display = 'flex';
+        colorUI.style.pointerEvents = 'none';
     }
 });
 
-// --- 2. SUPABASE REALTIME ---
+// --- 2. SUPABASE REALTIME SUBSCRIPTION ---
 supabaseClient
     .channel('mining-live')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'remote_messages' }, payload => {
         const { content, password } = payload.new;
-        const id = password.toUpperCase();
+        const id = password.toUpperCase(); // 'A' or 'B'
         
+        // Extract Colors (a-e)
         const colorSequence = content.toLowerCase().match(/[a-e]/g);
-        if (colorSequence) handleColorLogic(colorSequence.join(''), `dot-${id}`);
+        if (colorSequence) {
+            handleColorLogic(colorSequence.join(''), `dot-${id}`);
+        }
 
+        // Extract Messages (Digits + Letter)
         const msgItems = content.match(/(\d*[a-zA-Z])/g);
-        if (msgItems) handleMessageLogic(msgItems, id);
+        if (msgItems) {
+            handleMessageLogic(msgItems, id);
+        }
     })
     .subscribe();
 
-// --- 3. COLOR LOGIC (3s White Color) ---
+// --- 3. COLOR DISPLAY LOGIC (3s White) ---
 async function handleColorLogic(pattern, dotId) {
     const dot = document.getElementById(dotId);
     if(!dot) return;
     
     const sequence = pattern.toUpperCase().split('');
     const wait = (ms) => new Promise(r => setTimeout(r, ms));
-    const colorClasses = { 'A': 'active-red', 'B': 'active-blue', 'C': 'active-green', 'D': 'active-yellow', 'E': 'active-purple' };
+    const colorClasses = { 
+        'A': 'active-red', 'B': 'active-blue', 'C': 'active-green', 
+        'D': 'active-yellow', 'E': 'active-purple' 
+    };
 
+    // Repeat sequence 5 times
     for (let i = 0; i < 5; i++) {
         for (let char of sequence) {
             if (colorClasses[char]) {
@@ -56,7 +72,7 @@ async function handleColorLogic(pattern, dotId) {
                 await wait(500); 
             }
         }
-        // White present for 3 seconds as requested
+        // White signal present for 3 seconds
         dot.className = 'dot active-white'; 
         await wait(3000); 
         dot.className = 'dot'; 
@@ -64,15 +80,17 @@ async function handleColorLogic(pattern, dotId) {
     }
 }
 
-// --- 4. PAGING MESSAGE LOGIC (Lock every 7) ---
+// --- 4. MESSAGE PAGING LOGIC (7-Row Lock) ---
 function handleMessageLogic(items, charId) {
     items.forEach(item => {
-        // Find all existing groups
         let groups = messageUI.querySelectorAll('.msg-group');
         let activeGroup = groups[groups.length - 1];
 
-        // Check if we need a new group (if the last group's columns have 7 items)
-        if (!activeGroup || activeGroup.querySelectorAll(`#col-${charId} .msg-box`).length >= 7) {
+        // Check if the specific column (A or B) in current group has 7 items
+        const currentCount = activeGroup.querySelectorAll(`#col-${charId} .msg-box`).length;
+
+        if (currentCount >= 7) {
+            // Create a new "Page" for the next 7 items
             activeGroup = document.createElement('div');
             activeGroup.className = 'msg-group';
             activeGroup.innerHTML = `
@@ -82,7 +100,7 @@ function handleMessageLogic(items, charId) {
             messageUI.appendChild(activeGroup);
         }
 
-        // Add the message to the specific column in the active group
+        // Append to the correct column (A or B)
         const targetCol = activeGroup.querySelector(`#col-${charId}`);
         const box = document.createElement('div');
         box.className = 'msg-box';
