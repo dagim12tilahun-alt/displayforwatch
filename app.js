@@ -6,16 +6,9 @@ const colorUI = document.getElementById('coloring-layer-ui');
 const vh = window.innerHeight;
 
 // --- 1. VISIBILITY LOGIC ---
-// Uses the window scroll directly for better watch compatibility
 window.addEventListener('scroll', () => {
     const scrollPos = window.scrollY;
-    
-    // Hide dots once user starts scrolling down into the message area
-    if (scrollPos < vh * 0.3) {
-        colorUI.style.opacity = '1';
-    } else {
-        colorUI.style.opacity = '0';
-    }
+    colorUI.style.opacity = (scrollPos < vh * 0.3) ? '1' : '0';
 });
 
 // --- 2. SUPABASE REALTIME ---
@@ -28,13 +21,15 @@ supabaseClient
         const colorSequence = content.toLowerCase().match(/[a-e]/g);
         if (colorSequence) handleColorLogic(colorSequence.join(''), `dot-${id}`);
 
-        // Extract numbers and letters, ignoring any symbol in between
+        // Extract numbers and letters, ignoring symbols
         const regex = /(\d*)[^a-zA-Z\d]*([a-zA-Z])/g;
         let match;
         const foundItems = [];
         
         while ((match = regex.exec(content)) !== null) {
-            foundItems.push(match[1] + match[2]);
+            // Convert to Uppercase here
+            let cleanMsg = (match[1] + match[2]).toUpperCase();
+            foundItems.push(cleanMsg);
         }
 
         if (foundItems.length > 0) handleMessageLogic(foundItems, `col-${id}`);
