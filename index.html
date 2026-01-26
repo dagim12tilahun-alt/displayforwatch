@@ -11,21 +11,17 @@
             font-family: sans-serif; height: 100%; overflow: hidden; 
         }
 
-        /* Snap Container */
+        /* Continuous Scroll Container */
         .scroll-container { 
             height: 100vh; 
             overflow-y: scroll; 
             scroll-behavior: smooth; 
-            scroll-snap-type: y mandatory; /* This creates the 'locking' effect */
         }
         
-        /* Each 'Page' must be 100vh for the lock to work */
-        .layer, .msg-group { 
+        .layer { 
             width: 100vw; 
-            height: 100vh; 
-            scroll-snap-align: start; 
+            min-height: 100vh; 
             position: relative;
-            flex-shrink: 0;
         }
 
         /* Topbar */
@@ -36,7 +32,7 @@
         }
         .topbar-hidden { transform: translateY(-100%); }
 
-        /* Color UI (Fixed Overlay) */
+        /* Color UI Overlay */
         #coloring-layer-ui {
             position: fixed; bottom: 20px; right: 20px;
             display: flex; flex-direction: row; gap: 8px; z-index: 2000;
@@ -48,7 +44,7 @@
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* Per request: First hole is black/hidden */
+        /* First dot is invisible/black */
         #dot-A { display: none; } 
 
         /* Glow Effects */
@@ -59,16 +55,13 @@
         .dot.active-purple { background: #6f42c1; box-shadow: 0 0 10px 2px rgba(111,66,193,0.8); }
         .dot.active-white { background: #ffffff; box-shadow: 0 0 12px 3px rgba(255,255,255,0.9); }
 
-        /* Message Layout */
+        /* Messaging Layer (Continuous Scroll) */
         #messaging-layer-ui { 
-            display: flex; flex-direction: column; width: 100%; 
+            display: flex; flex-direction: row; justify-content: flex-end; 
+            gap: 15px; padding: 80px 20px 100px 0; 
+            width: 100%; min-height: 100vh;
+            box-sizing: border-box;
         }
-        
-        .msg-group {
-            display: flex; flex-direction: row; justify-content: flex-end;
-            gap: 15px; padding: 80px 20px 40px 0; box-sizing: border-box;
-        }
-
         .msg-column { display: flex; flex-direction: column; gap: 6px; width: 80px; }
         
         .msg-box { 
@@ -76,8 +69,7 @@
             background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
             color: #007bff; border-radius: 4px; text-align: center;
         }
-        /* Style for column B messages */
-        .msg-group .msg-column:nth-child(2) .msg-box { color: #28a745; }
+        #col-B .msg-box { color: #28a745; }
     </style>
 </head>
 <body>
@@ -86,12 +78,12 @@
     <div class="scroll-container" id="mainScroll">
         <section class="layer" id="layer1"></section>
         
-        <div id="messaging-layer-ui">
-            <div class="msg-group">
+        <section class="layer" id="layer2">
+            <div id="messaging-layer-ui">
                 <div id="col-A" class="msg-column"></div>
                 <div id="col-B" class="msg-column"></div>
             </div>
-        </div>
+        </section>
     </div>
 
     <div id="coloring-layer-ui">
