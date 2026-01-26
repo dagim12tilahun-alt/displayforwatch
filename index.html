@@ -5,39 +5,34 @@
     <title>Mining Hub</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
-        /* Base Setup - Cleaned for Watch Scrolling */
         body, html { 
             margin: 0; padding: 0; background: black; color: white; 
             font-family: sans-serif; 
-            /* Allow the watch to see the full document height */
             overflow-y: auto; 
             overflow-x: hidden;
             overscroll-behavior: none; 
         }
 
-        /* The Hub - Now one long continuous element */
         .main-wrapper { 
             width: 100vw;
             display: flex;
             flex-direction: column;
-            /* touch-action: auto ensures the Watch Crown and touch work normally */
             touch-action: auto; 
         }
         
-        /* Section 1: Top area (Dots space) */
         .color-section { 
             width: 100vw; 
-            height: 100vh; /* Keeps initial screen focused on dots */
+            height: 100vh; 
             position: relative;
         }
 
-        /* Section 2: Messaging area (Right underneath) */
+        /* Adjusted for closer grouping and border proximity */
         #messaging-layer-ui { 
             display: flex; 
             flex-direction: row; 
             justify-content: flex-end; 
-            gap: 12px; 
-            padding: 20px 15px 100px 0; 
+            gap: 4px; /* Reduced gap between Col A and Col B */
+            padding: 20px 4px 100px 0; /* Reduced right padding to 4px to bring it closer to the border */
             width: 100%;
             box-sizing: border-box;
             background: black;
@@ -61,14 +56,14 @@
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
-        #dot-A { display: none; } /* Hidden as requested */
+        #dot-A { display: none; } 
 
         /* Colors */
         .dot.active-red { background: #ff0000; box-shadow: 0 0 10px 2px rgba(255,0,0,0.8); }
         .dot.active-blue { background: #007bff; box-shadow: 0 0 10px 2px rgba(0,123,255,0.8); }
         .dot.active-green { background: #28a745; box-shadow: 0 0 10px 2px rgba(40,167,69,0.8); }
         .dot.active-yellow { background: #ffc107; box-shadow: 0 0 10px 2px rgba(255,193,7,0.8); }
-        .dot.active-purple { background: #6f42c1; box-shadow: 0 0 10px 2px rgba(111,66,193,0.8); }
+        .dot.active-purple { background: #6f42c1; box-shadow: 0 0 111,66,193,0.8); }
         .dot.active-white { background: #ffffff; box-shadow: 0 0 12px 3px rgba(255,255,255,0.9); }
 
         .msg-column { display: flex; flex-direction: column; gap: 6px; width: 75px; }
@@ -77,6 +72,7 @@
             font-size: 17px; min-height: 40px; line-height: 40px; padding: 2px;
             background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
             color: #007bff; border-radius: 4px; text-align: center;
+            text-transform: uppercase; /* Ensures all letters displayed are CAPITAL */
         }
         #col-B .msg-box { color: #28a745; }
     </style>
@@ -86,7 +82,6 @@
 
     <div class="main-wrapper">
         <section class="color-section"></section>
-        
         <div id="messaging-layer-ui">
             <div id="col-A" class="msg-column"></div>
             <div id="col-B" class="msg-column"></div>
